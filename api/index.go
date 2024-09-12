@@ -3,6 +3,7 @@ package api
 import (
 	"bytes"
 	"compress/gzip"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"log"
@@ -51,9 +52,21 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	path := r.URL.Path
+	path = path[1:] // remove prefix '/'
+
 	// Get the URL to proxy
 	re := regexp.MustCompile(`^/*(https?:)/*`)
-	u := re.ReplaceAllString(r.URL.Path, "$1//")
+	if !re.Match([]byte(path)) {
+		b, err := base64.URLEncoding.DecodeString(path)
+		if err != nil {
+			http.Error(w, "invalid url: "+path, http.StatusBadRequest)
+			return
+		}
+		path = string(b)
+	}
+
+	u := re.ReplaceAllString(path, "$1//")
 	if r.URL.RawQuery != "" {
 		u += "?" + r.URL.RawQuery
 	}
