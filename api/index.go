@@ -3,14 +3,12 @@ package api
 import (
 	"bytes"
 	"compress/gzip"
-	"encoding/base64"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"path"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -56,24 +54,29 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	path = path[1:] // remove prefix '/'
 
 	// Get the URL to proxy
-	re := regexp.MustCompile(`^/*(https?:)/*`)
+	/* re := regexp.MustCompile(`^/*(https?:)/*`)
 	if !re.Match([]byte(path)) {
-		b, err := base64.URLEncoding.DecodeString(path)
-		if err != nil {
-			http.Error(w, "invalid url: "+path, http.StatusBadRequest)
-			return
-		}
-		path = string(b)
+		// b, err := base64.URLEncoding.DecodeString(path)
+		// if err != nil {
+		// 	http.Error(w, "invalid url: "+path, http.StatusBadRequest)
+		// 	return
+		// }
+		// path = string(b)
+		path =
 	}
 
-	u := re.ReplaceAllString(path, "$1//")
+	u := re.ReplaceAllString(path, "$1//") */
+	u := path
+	if !strings.HasPrefix(path, "https") {
+		u = fmt.Sprintf("https://%s", path)
+	}
 	if r.URL.RawQuery != "" {
 		u += "?" + r.URL.RawQuery
 	}
-	if !strings.HasPrefix(u, "http") {
-		http.Error(w, "invalid url: "+u, http.StatusBadRequest)
-		return
-	}
+	// if !strings.HasPrefix(u, "http") {
+	// 	http.Error(w, "invalid url: "+u, http.StatusBadRequest)
+	// 	return
+	// }
 
 	// Create a new request
 	req, err := http.NewRequest(r.Method, u, r.Body)
